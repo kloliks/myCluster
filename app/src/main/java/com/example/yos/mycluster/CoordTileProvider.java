@@ -128,8 +128,10 @@ class CoordTileProvider implements TileProvider {
         );
 
         layers = new CityRow[21][];
-        for (int i = 5; i <= 17; i += 2)
+        for (int i = 5; i < 18; i += 2)
             layers[i] = new CityRow[1 << i];
+        for (int i = 18; i < 22; ++i)
+            layers[i] = layers[17];
     }
 
     @Override
@@ -148,6 +150,18 @@ class CoordTileProvider implements TileProvider {
         synchronized (mBorderTile) {
             copy = mBorderTile.copy(android.graphics.Bitmap.Config.ARGB_8888, true);
         }
+
+        if (layers[zoom] == null) {
+            Bitmap coordTile1 = drawTileCoords(x*2, y*2, zoom+1);
+            Bitmap coordTile2 = drawTileCoords(x*2, y*2 + 1, zoom+1);
+
+            Bitmap coordTile3 = drawTileCoords(x*2 + 1, y*2, zoom+1);
+            Bitmap coordTile4 = drawTileCoords(x*2 + 1, y*2 + 1, zoom+1);
+
+            Canvas canvas = new Canvas(copy);
+            canvas.drawBitmap();
+        }
+
         Canvas canvas = new Canvas(copy);
 //        String tileCoords = "(" + x + ", " + y + ")";
         String zoomLevel = "zoom = " + zoom;
