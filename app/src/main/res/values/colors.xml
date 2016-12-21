@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="colorPrimary">#3F51B5</color>
+    <color name="colorPrimaryDark">#303F9F</color>
+    <color name="colorAccent">#FF4081</color>
+
+    <color name="Over50000_b">#E00000</color>
+    <color name="Over50000">#F02020</color>
+
+    <color name="Over10000_b">#C02020</color>
+    <color name="Over10000">#F04040</color>
+
+    <color name="Over5000_b">#A03020</color>
+    <color name="Over5000">#C05040</color>
+
+    <color name="Over1000_b">#904020</color>
+    <color name="Over1000">#B06040</color>
+
+    <color name="Over500_b">#705020</color>
+    <color name="Over500">#907040</color>
+
+    <color name="Over100_b">#606020</color>
+    <color name="Over100">#808040</color>
+
+    <color name="Over50_b">#507020</color>
+    <color name="Over50">#809040</color>
+
+    <color name="Over10_b">#408020</color>
+    <color name="Over10">#60A040</color>
+
+    <color name="Once_b">#408020</color>
+    <color name="Once">#60A040</color>
+</resources>
