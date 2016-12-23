@@ -3,6 +3,7 @@ package com.example.yos.mycluster;
 import android.app.Fragment;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
+import android.graphics.Color;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.support.v4.content.res.ResourcesCompat;
@@ -20,6 +21,7 @@ import com.google.android.gms.maps.model.GroundOverlayOptions;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MapStyleOptions;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.gms.maps.model.PolylineOptions;
 import com.google.android.gms.maps.model.TileOverlayOptions;
 import com.google.android.gms.maps.model.TileProvider;
 
@@ -82,6 +84,83 @@ public class myMapFragment extends Fragment implements OnMapReadyCallback {
         mMap = map;
         setMapStyle();
         addTileOverlay();
+
+        double[][] latitudes = new double[17][2];
+        latitudes[0][0] = 85.0511287798;
+        latitudes[0][1] = 85.0511287798;
+        latitudes[1][0] = 66.5132604431;
+        latitudes[1][1] = 66.5132604431;
+        latitudes[2][0] = 40.9798980696;
+        latitudes[2][1] = 79.1713346408;
+        latitudes[3][0] = 21.9430455334;
+        latitudes[3][1] = 55.7765730187;
+        latitudes[4][0] = 11.1784018737;
+        latitudes[4][1] = 31.9521622380;
+        latitudes[5][0] = 5.6159858192;
+        latitudes[5][1] = 16.6361918784;
+        latitudes[6][0] = 2.8113711933;
+        latitudes[6][1] = 8.4071681636;
+        latitudes[7][0] = 1.4061088354;
+        latitudes[7][1] = 4.2149431414;
+        latitudes[8][0] = 0.7031073524;
+        latitudes[8][1] = 2.1088986592;
+        latitudes[9][0] = 0.3515602940;
+        latitudes[9][1] = 1.0546279423;
+        latitudes[10][0] = 0.1757809742;
+        latitudes[10][1] = 0.5273363048;
+        latitudes[11][0] = 0.0878905905;
+        latitudes[11][1] = 0.2636709443;
+        latitudes[12][0] = 0.0439453082;
+        latitudes[12][1] = 0.1318358212;
+        latitudes[13][0] = 0.0219726557;
+        latitudes[13][1] = 0.0659179542;
+        latitudes[14][0] = 0.0109863281;
+        latitudes[14][1] = 0.0329589826;
+        latitudes[15][0] = 0.0054931641;
+        latitudes[15][1] = 0.0164794920;
+        latitudes[16][0] = 0.0027465820;
+        latitudes[16][1] = 0.0082397461;
+
+
+        for (int i = 0; i < 2; ++i) {
+            map.addPolyline((new PolylineOptions())
+                .add(new LatLng(0, 45+i), new LatLng(latitudes[i][0], 45+i))
+                .width(17)
+                .color(Color.CYAN)
+            );
+        }
+        for (int i = 2; i < 17; ++i) {
+            map.addPolyline((new PolylineOptions())
+                .add(new LatLng(-latitudes[i][1], 45+i), new LatLng(latitudes[i][1], 45+i))
+                .width(17)
+                .color(Color.MAGENTA)
+            );
+            map.addPolyline((new PolylineOptions())
+                .add(new LatLng(-latitudes[i][0], 45+i), new LatLng(latitudes[i][0], 45+i))
+                .width(17)
+                .color(Color.CYAN)
+            );
+        }
+        map.addPolyline((new PolylineOptions())
+            .add(new LatLng(0, 180), new LatLng(85.0511287798, -180))
+            .width(17)
+            .color(Color.BLUE)
+        );
+        map.addPolyline((new PolylineOptions())
+            .add(new LatLng(0, 90), new LatLng(66.5132604431, 90))
+            .width(17)
+            .color(Color.GREEN)
+        );
+        map.addPolyline((new PolylineOptions())
+            .add(new LatLng(0, -90), new LatLng(66.5132604431, -90))
+            .width(17)
+            .color(Color.RED)
+        );
+        map.addPolyline((new PolylineOptions())
+            .add(new LatLng(0, 0), new LatLng(85.0511287798, 0))
+            .width(17)
+            .color(Color.YELLOW)
+        );
 //        Drawable shape = ResourcesCompat.getDrawable(getResources(), R.drawable.arc, null);
 //        int w = shape.getIntrinsicWidth();
 //        int h = shape.getIntrinsicHeight();

@@ -3,7 +3,7 @@ package com.example.yos.mycluster;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 
-import com.google.android.gms.maps.model.MapStyleOptions;
+import com.example.yos.mycluster.Cluster.CoordTileProvider;
 import com.google.android.gms.maps.model.TileOverlayOptions;
 import com.google.android.gms.maps.model.TileProvider;
 

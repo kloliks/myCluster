@@ -1,15 +1,18 @@
-package com.example.yos.mycluster;
+package com.example.yos.mycluster.Cluster;
 
 
 import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Paint;
-import android.graphics.Rect;
 import android.graphics.RectF;
 import android.support.v4.content.res.ResourcesCompat;
 import android.util.Log;
 
+import com.example.yos.mycluster.Cluster.Layers.Layer;
+import com.example.yos.mycluster.Cluster.Layers.Layer1;
+import com.example.yos.mycluster.Cluster.Markers.Marker;
+import com.example.yos.mycluster.R;
 import com.google.android.gms.maps.model.Tile;
 import com.google.android.gms.maps.model.TileProvider;
 
@@ -17,7 +20,7 @@ import java.io.ByteArrayOutputStream;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 
-class CoordTileProvider implements TileProvider {
+public class CoordTileProvider implements TileProvider {
 
     private static final int TILE_SIZE_DP = 256;
 
@@ -87,7 +90,7 @@ class CoordTileProvider implements TileProvider {
         return bitmap;
     }
 
-    CoordTileProvider(Resources resources) {
+    public CoordTileProvider(Resources resources) {
         /* Scale factor based on density, with a 0.6 multiplier to increase tile generation
          * speed */
         mScaleFactor = resources.getDisplayMetrics().density;// * 0.6f;
@@ -119,7 +122,7 @@ class CoordTileProvider implements TileProvider {
         canvas.drawRect(0, 0, tile_size_scale, tile_size_scale, strokePaint);
 
 
-        layer = new Layer();
+        layer = new Layer1();
         layer.addMarker(new Marker("dol", 0, 0));
         layer.addMarker(new Marker("bla", 0, 0));
         layer.addMarker(new Marker( "ta", 0, 0));
@@ -133,46 +136,7 @@ class CoordTileProvider implements TileProvider {
     public Tile getTile(int x, int y, int zoom) {
         Log.e("TILE", "x: "+ x +", y: "+ y +", zoom: "+ zoom);
 
-        Bitmap coordTile = null;
-        if (zoom < 17) {
-            int tile_size = (int) (TILE_SIZE_DP * mScaleFactor);
-            int half_tile_size = tile_size / 2;
-            coordTile = Bitmap.createBitmap(tile_size, tile_size, Bitmap.Config.ARGB_8888);
-
-            Bitmap coordTile1 = drawTileCoords(x * 2, y * 2, zoom + 1, half_tile_size);
-            Bitmap coordTile2 = drawTileCoords(x * 2, y * 2 + 1, zoom + 1, half_tile_size);
-
-            Bitmap coordTile3 = drawTileCoords(x * 2 + 1, y * 2, zoom + 1, half_tile_size);
-            Bitmap coordTile4 = drawTileCoords(x * 2 + 1, y * 2 + 1, zoom + 1, half_tile_size);
-
-            Canvas canvas = new Canvas(coordTile);
-            canvas.drawBitmap(
-                    coordTile1,
-                    new Rect(0, 0, coordTile1.getWidth(), coordTile1.getHeight()),
-                    new Rect(0, 0, half_tile_size - 1, half_tile_size - 1),
-                    null
-            );
-            canvas.drawBitmap(
-                    coordTile2,
-                    new Rect(0, 0, coordTile2.getWidth(), coordTile2.getHeight()),
-                    new Rect(0, half_tile_size, half_tile_size - 1, tile_size - 1),
-                    null
-            );
-            canvas.drawBitmap(
-                    coordTile3,
-                    new Rect(0, 0, coordTile3.getWidth(), coordTile3.getHeight()),
-                    new Rect(half_tile_size, 0, tile_size - 1, half_tile_size - 1),
-                    null
-            );
-            canvas.drawBitmap(
-                    coordTile4,
-                    new Rect(0, 0, coordTile4.getWidth(), coordTile4.getHeight()),
-                    new Rect(half_tile_size, half_tile_size, tile_size - 1, tile_size - 1),
-                    null
-            );
-        } else {
-            coordTile = drawTileCoords(x, y, zoom, (int) (TILE_SIZE_DP  * mScaleFactor));
-        }
+        Bitmap coordTile = drawTileCoords(x, y, zoom);
 
         ByteArrayOutputStream stream = new ByteArrayOutputStream();
         coordTile.compress(Bitmap.CompressFormat.PNG, 0, stream);
@@ -180,85 +144,24 @@ class CoordTileProvider implements TileProvider {
         return new Tile(mBorderTile.getWidth(), mBorderTile.getHeight(), bitmapData);
     }
 
-    private Bitmap drawTileCoords(int x, int y, int zoom, int size) {
+    private Bitmap drawTileCoords(int x, int y, int zoom) {
         // Synchronize copying the bitmap to avoid a race condition in some devices.
-//        Bitmap copy = null;
-        Bitmap tile = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888);
+        Bitmap copy = null;
+        synchronized (mBorderTile) {
+            copy = mBorderTile.copy(android.graphics.Bitmap.Config.ARGB_8888, true);
+        }
 
-        Paint strokePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
-        strokePaint.setStyle(Paint.Style.STROKE);
-        strokePaint.setStrokeWidth(mScaleFactor * 1);
-
-        Canvas canvas = new Canvas(tile);
-//        canvas.drawRect(0, 0, size, size, strokePaint);
-
-//        synchronized (mBorderTile) {
-//            copy = mBorderTile.copy(android.graphics.Bitmap.Config.ARGB_8888, true);
-//        }
-
-//        if (layers[zoom] == null) {
-//            int half_size = size / 2;
-
-//            Bitmap coordTile1 = drawTileCoords(x*2, y*2, zoom+1, half_size);
-//            Bitmap coordTile2 = drawTileCoords(x*2, y*2 + 1, zoom+1, half_size);
-//
-//            Bitmap coordTile3 = drawTileCoords(x*2 + 1, y*2, zoom+1, half_size);
-//            Bitmap coordTile4 = drawTileCoords(x*2 + 1, y*2 + 1, zoom+1, half_size);
-//
-//            canvas.drawBitmap(
-//                    coordTile1,
-//                    new Rect(0, 0, coordTile1.getWidth(), coordTile1.getHeight()),
-//                    new Rect(0, 0, half_size - 1, half_size - 1),
-//                    null
-//            );
-//            canvas.drawBitmap(
-//                    coordTile2,
-//                    new Rect(0, 0, coordTile1.getWidth(), coordTile1.getHeight()),
-//                    new Rect(0, half_size, half_size - 1, size - 1),
-//                    null
-//            );
-//            canvas.drawBitmap(
-//                    coordTile3,
-//                    new Rect(0, 0, coordTile1.getWidth(), coordTile1.getHeight()),
-//                    new Rect(half_size, 0, size - 1, half_size - 1),
-//                    null
-//            );
-//            canvas.drawBitmap(
-//                    coordTile4,
-//                    new Rect(0, 0, coordTile1.getWidth(), coordTile1.getHeight()),
-//                    new Rect(half_size, half_size, size - 1, size - 1),
-//                    null
-//            );
-//
-//            return tile;
-//        }
-
-//        Canvas canvas = new Canvas(tile);
-//        String tileCoords = "(" + x + ", " + y + ")";
+        Canvas canvas = new Canvas(copy);
+        String tileCoords = "(" + x + ", " + y + ")";
         String zoomLevel = "zoom = " + zoom;
         /* Paint is not thread safe. */
         Paint mTextPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
         mTextPaint.setTextAlign(Paint.Align.CENTER);
-        mTextPaint.setTextSize(8 * mScaleFactor);
-//        canvas.drawText(tileCoords, TILE_SIZE_DP * mScaleFactor / 2,
-//                TILE_SIZE_DP * mScaleFactor / 2, mTextPaint);
+        mTextPaint.setTextSize(22 * mScaleFactor);
+        canvas.drawText(tileCoords, copy.getWidth() / 2, copy.getHeight() / 2, mTextPaint);
+        canvas.drawText(zoomLevel, copy.getWidth() / 2, copy.getHeight() * 2 / 3, mTextPaint);
 
-//        final float tile_size_scale = TILE_SIZE_DP * mScaleFactor;
-
-        Bitmap bitmap = mOver500;
-        canvas.drawBitmap(bitmap,
-                new Rect(0, 0, bitmap.getWidth(), bitmap.getHeight()),
-                new Rect((int) ((size - bitmap.getWidth()) / 2),
-                         (int) ((size - bitmap.getHeight()) / 2),
-                         (int) ((size + bitmap.getWidth()) / 2),
-                         (int) ((size + bitmap.getHeight()) / 2)
-                ),
-                null
-        );
-
-        canvas.drawText(zoomLevel, size / 2, size * 2 / 3, mTextPaint);
-
-        return tile;
+        return copy;
     }
 }
 
