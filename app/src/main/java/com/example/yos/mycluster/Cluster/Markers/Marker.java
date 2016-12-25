@@ -6,15 +6,13 @@ import com.google.android.gms.maps.model.LatLng;
 
 public class Marker {
     public String title;
-    public LatLng coordinates;
+    public double latitude;
+    public double longitude;
 
-    public Marker(String title, double lat, double lon) {
+    public Marker(String title, double latitude, double longitude) {
         this.title = title;
-        coordinates = new LatLng(lat, lon);
-    }
-    public Marker(String title, LatLng coordinates) {
-        this.title = title;
-        this.coordinates = coordinates;
+        this.latitude = latitude;
+        this.longitude = longitude;
     }
 
     @Override

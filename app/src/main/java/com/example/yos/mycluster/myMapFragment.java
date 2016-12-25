@@ -11,6 +11,8 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
+import com.example.yos.mycluster.Cluster.CoordTileProvider;
+import com.example.yos.mycluster.Cluster.Markers.Marker;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapView;
 import com.google.android.gms.maps.OnMapReadyCallback;
@@ -69,7 +71,11 @@ public class myMapFragment extends Fragment implements OnMapReadyCallback {
 
     private void addTileOverlay() {
         if (mMap != null && mTileOverlayOptions != null) {
+            ((CoordTileProvider) mTileOverlayOptions.getTileProvider()).setMap(mMap);
             mMap.addTileOverlay(mTileOverlayOptions);
+//            ((CoordTileProvider) mTileOverlayOptions.getTileProvider()).addMarkers(3);
+//            ((CoordTileProvider) mTileOverlayOptions.getTileProvider()).addMarkers(3);
+//            ((CoordTileProvider) mTileOverlayOptions.getTileProvider()).addMarkers(3);
         }
     }
 
@@ -161,6 +167,24 @@ public class myMapFragment extends Fragment implements OnMapReadyCallback {
             .width(17)
             .color(Color.YELLOW)
         );
+
+//        Marker marker = new Marker("bla", 35, 35);
+//        mMap.addMarker(new MarkerOptions()
+//                .position(new LatLng(marker.latitude, marker.longitude))
+//                .title(marker.title)
+//                .icon(BitmapDescriptorFactory.fromBitmap(mOnce))
+//        );
+//        mMap.addMarker(new MarkerOptions()
+//                .position(new LatLng(marker.latitude, marker.longitude))
+//                .title(marker.title)
+//                .icon(BitmapDescriptorFactory.fromBitmap(mOnce))
+//        );
+//        com.google.android.gms.maps.model.Marker m = mMap.addMarker(new MarkerOptions()
+//                .position(new LatLng(marker.latitude, marker.longitude))
+//                .title(marker.title)
+//                .icon(BitmapDescriptorFactory.fromBitmap(mOnce))
+//        );
+//        m.setVisible(false);
 //        Drawable shape = ResourcesCompat.getDrawable(getResources(), R.drawable.arc, null);
 //        int w = shape.getIntrinsicWidth();
 //        int h = shape.getIntrinsicHeight();

@@ -9,10 +9,13 @@ import android.graphics.RectF;
 import android.support.v4.content.res.ResourcesCompat;
 import android.util.Log;
 
-import com.example.yos.mycluster.Cluster.Layers.Layer;
 import com.example.yos.mycluster.Cluster.Layers.Layer1;
 import com.example.yos.mycluster.Cluster.Markers.Marker;
 import com.example.yos.mycluster.R;
+import com.google.android.gms.maps.GoogleMap;
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
+import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.Tile;
 import com.google.android.gms.maps.model.TileProvider;
 
@@ -38,17 +41,9 @@ public class CoordTileProvider implements TileProvider {
 
     private final Bitmap mBorderTile;
 
-    private Layer layer;
+    private Layer1 layer;
 
-    private static int getResId(String resName, Class c) {
-        try {
-            Field idField = c.getField(resName);
-            return idField.getInt(null);
-        } catch (Exception e) {
-            e.printStackTrace();
-            return -1;
-        }
-    }
+//    private ArrayList<com.google.android.gms.maps.model.Marker> mMarkers;
 
     private Bitmap prepareArc(
             Resources resources, int scale, String level, int strokeColor, int fillColor)
@@ -89,7 +84,6 @@ public class CoordTileProvider implements TileProvider {
 
         return bitmap;
     }
-
     public CoordTileProvider(Resources resources) {
         /* Scale factor based on density, with a 0.6 multiplier to increase tile generation
          * speed */
@@ -123,18 +117,70 @@ public class CoordTileProvider implements TileProvider {
 
 
         layer = new Layer1();
-        layer.addMarker(new Marker("dol", 0, 0));
-        layer.addMarker(new Marker("bla", 0, 0));
-        layer.addMarker(new Marker( "ta", 0, 0));
-        layer.addMarker(new Marker( "na", 0, 0));
+        layer.addMarker(new Marker("dol", -35, -35));
+        layer.addMarker(new Marker("bla", -40, -40));
+        layer.addMarker(new Marker( "ta",  40, -40));
+        layer.addMarker(new Marker( "na", -35,  35));
 
-        ArrayList<Marker> markers = layer.markersList(1);
+//        mMarkers = new ArrayList<>();
+        ArrayList<Marker> markers = layer.markersList(0);
         Log.e("Markers: ", markers.toString());
     }
 
+//    private GoogleMap mMap;
+//    public void setMap(GoogleMap map) {
+//        Log.e("setMap", "i'm here");
+//        mMap = map;
+//
+//        ArrayList<Marker> markers = layer.markersList(0);
+//        Log.e("Markers: ", markers.toString());
+//        for (int i = 0; i < markers.size(); ++i) {
+//            Marker marker = markers.get(i);
+//            mMarkers.add(
+//                    mMap.addMarker(new MarkerOptions()
+//                        .position(new LatLng(marker.latitude, marker.longitude))
+//                        .title(marker.title)
+//                        .icon(BitmapDescriptorFactory.fromBitmap(mOnce))
+//                )
+//            );
+//            mMarkers.get(mMarkers.size()-1).setVisible(false);
+//        }
+//    }
+
+//    public void addMarkers(int zoom) {
+//        if (zoom != old_zoom) {
+//            mMap.clear();
+//        }
+//
+//        old_zoom = zoom;
+//        ArrayList<Marker> markers = layer.markersList(0);
+//        Log.e("Markers: ", markers.toString());
+//        for (int i = 0; i < markers.size(); ++i) {
+//            Marker marker = markers.get(i);
+//            mMap.addMarker(new MarkerOptions()
+//                    .position(new LatLng(marker.latitude, marker.longitude))
+//                    .title(marker.title)
+//                    .icon(BitmapDescriptorFactory.fromBitmap(mOnce))
+//            );
+//        }
+//    }
+//
+//    private int old_zoom;
     @Override
     public Tile getTile(int x, int y, int zoom) {
         Log.e("TILE", "x: "+ x +", y: "+ y +", zoom: "+ zoom);
+
+//        if (zoom == 4) {
+//            for (int i = 0; i < mMarkers.size(); ++i) {
+//                mMarkers.get(i).setVisible(true);
+//            }
+//        }
+//        if (old_zoom == 4) {
+//            for (int i = 0; i < mMarkers.size(); ++i) {
+//                mMarkers.get(i).setVisible(false);
+//            }
+//        }
+//        old_zoom = zoom;
 
         Bitmap coordTile = drawTileCoords(x, y, zoom);
 
