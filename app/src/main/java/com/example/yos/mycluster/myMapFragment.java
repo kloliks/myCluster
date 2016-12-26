@@ -4,9 +4,11 @@ import android.app.Fragment;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
+import android.graphics.Point;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.support.v4.content.res.ResourcesCompat;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -18,17 +20,87 @@ import com.google.android.gms.maps.MapView;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.model.BitmapDescriptor;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
+import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.GroundOverlay;
 import com.google.android.gms.maps.model.GroundOverlayOptions;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MapStyleOptions;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.gms.maps.model.PolygonOptions;
 import com.google.android.gms.maps.model.PolylineOptions;
+import com.google.android.gms.maps.model.Tile;
+import com.google.android.gms.maps.model.TileOverlay;
 import com.google.android.gms.maps.model.TileOverlayOptions;
 import com.google.android.gms.maps.model.TileProvider;
 
 
-public class myMapFragment extends Fragment implements OnMapReadyCallback {
+public class myMapFragment extends Fragment implements
+      OnMapReadyCallback
+    , GoogleMap.OnCameraIdleListener
+    , GoogleMap.OnCameraMoveStartedListener
+    , GoogleMap.OnCameraMoveCanceledListener
+{
+    private static double fromLatitude(double latitude) {
+        double radians = Math.toRadians(latitude + 90) / 2;
+        return Math.toDegrees(Math.log(Math.tan(radians)));
+    }
+    private static double toLatitude(double mercator) {
+        double radians = Math.atan(Math.exp(Math.toRadians(mercator)));
+        return Math.toDegrees(2 * radians) - 90;
+    }
+    class tileProvider implements TileProvider {
+        @Override
+        public Tile getTile(int x, int y, int zoom) {
+            Log.e("myTILE", "x: "+ x +", y: "+ y +", zoom: "+ zoom);
+            return NO_TILE;
+        }
+    }
+    @Override
+    public void onCameraIdle() {
+        Log.e("TADA", "onCameraIdle");
+//        TileProvider tileProvider = new tileProvider();
+//        TileOverlay to = mMap.addTileOverlay(new TileOverlayOptions()
+//                .tileProvider(tileProvider)
+//        );
+//        to.remove();
+        CameraPosition cp = mMap.getCameraPosition();
+        Log.e("CameraPosition", cp.toString());
+
+        final double MIN_LATITUDE = fromLatitude(-85.0511);
+        final double MAX_LATITUDE = fromLatitude( 85.0511);
+
+        final double MIN_LONGITUDE = -180;
+        final double MAX_LONGITUDE =  180;
+
+        double l_lat = MAX_LATITUDE - MIN_LATITUDE;
+        double l_lon = MAX_LONGITUDE - MIN_LONGITUDE;
+
+        int zoom = (int) cp.zoom;
+        double lat_normal = l_lat / (1 << zoom);
+        double lon_normal = l_lon / (1 << zoom);
+        Log.e("Lat normal", ""+ lat_normal);
+        Log.e("Lon normal", ""+ lon_normal);
+
+        mMap.addPolygon(new PolygonOptions()
+                .add(
+                        new LatLng(toLatitude(MAX_LATITUDE-1*lat_normal), MAX_LONGITUDE-1*lon_normal),
+                        new LatLng(toLatitude(MAX_LATITUDE-2*lat_normal), MAX_LONGITUDE-1*lon_normal),
+                        new LatLng(toLatitude(MAX_LATITUDE-2*lat_normal), MAX_LONGITUDE-2*lon_normal),
+                        new LatLng(toLatitude(MAX_LATITUDE-1*lat_normal), MAX_LONGITUDE-2*lon_normal)
+                )
+                .strokeColor(Color.RED)
+                .strokeWidth(17)
+                .fillColor(Color.YELLOW)
+        );
+    }
+    @Override
+    public void onCameraMoveStarted(int var1) {
+        Log.e("TADA", "onCameraMoveStarted");
+    }
+    @Override
+    public void onCameraMoveCanceled() {
+        Log.e("TADA", "onCameraMoveCanceled");
+    }
     private static final String MAPVIEW_BUNDLE_KEY = "MapViewBundleKey";
 
     private GoogleMap mMap;
@@ -71,7 +143,7 @@ public class myMapFragment extends Fragment implements OnMapReadyCallback {
 
     private void addTileOverlay() {
         if (mMap != null && mTileOverlayOptions != null) {
-            ((CoordTileProvider) mTileOverlayOptions.getTileProvider()).setMap(mMap);
+//            ((CoordTileProvider) mTileOverlayOptions.getTileProvider()).setMap(mMap);
             mMap.addTileOverlay(mTileOverlayOptions);
 //            ((CoordTileProvider) mTileOverlayOptions.getTileProvider()).addMarkers(3);
 //            ((CoordTileProvider) mTileOverlayOptions.getTileProvider()).addMarkers(3);
@@ -88,6 +160,9 @@ public class myMapFragment extends Fragment implements OnMapReadyCallback {
     @Override
     public void onMapReady(GoogleMap map) {
         mMap = map;
+        mMap.setOnCameraIdleListener(this);
+        mMap.setOnCameraMoveStartedListener(this);
+        mMap.setOnCameraMoveCanceledListener(this);
         setMapStyle();
         addTileOverlay();
 
