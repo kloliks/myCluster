@@ -125,7 +125,14 @@ public class myMapFragment extends Fragment implements
         Log.e("CameraPosition", cp.toString());
         int zoom = (int) cp.zoom;
 
-        VisibleRegion visibleRegion = mMap.getProjection().getVisibleRegion();
+//        VisibleRegion visibleRegion = mMap.getProjection().getVisibleRegion();
+        VisibleRegion visibleRegion = new VisibleRegion(
+                new LatLng(-90, 0),
+                new LatLng(-90, 100),
+                new LatLng(-70, 0),
+                new LatLng(-70, 100),
+                null
+        );
         Log.e("Visible region", visibleRegion.toString());
 
         final double MIN_LATITUDE = fromLatitude(-85.0511);
@@ -141,6 +148,7 @@ public class myMapFragment extends Fragment implements
         for (PointD vertex : shape.vertices) {
             visibleShape.add(new LatLng(toLatitude(vertex.y), vertex.x));
         }
+        Log.e("Visible shape", visibleShape.toString());
 
         double l_lat = MAX_LATITUDE - MIN_LATITUDE;
         double l_lon = MAX_LONGITUDE - MIN_LONGITUDE;
