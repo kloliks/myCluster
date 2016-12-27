@@ -1,37 +1,28 @@
 package com.example.yos.mycluster;
 
 import android.app.Fragment;
-import android.graphics.Bitmap;
-import android.graphics.Canvas;
 import android.graphics.Color;
-import android.graphics.Point;
-import android.graphics.drawable.Drawable;
 import android.os.Bundle;
-import android.support.v4.content.res.ResourcesCompat;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
-import com.example.yos.mycluster.Cluster.CoordTileProvider;
-import com.example.yos.mycluster.Cluster.Markers.Marker;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapView;
 import com.google.android.gms.maps.OnMapReadyCallback;
-import com.google.android.gms.maps.model.BitmapDescriptor;
-import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.CameraPosition;
-import com.google.android.gms.maps.model.GroundOverlay;
-import com.google.android.gms.maps.model.GroundOverlayOptions;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MapStyleOptions;
-import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.gms.maps.model.Polygon;
 import com.google.android.gms.maps.model.PolygonOptions;
 import com.google.android.gms.maps.model.PolylineOptions;
 import com.google.android.gms.maps.model.Tile;
-import com.google.android.gms.maps.model.TileOverlay;
 import com.google.android.gms.maps.model.TileOverlayOptions;
 import com.google.android.gms.maps.model.TileProvider;
+import com.google.android.gms.maps.model.VisibleRegion;
+
+import java.util.ArrayList;
 
 
 public class myMapFragment extends Fragment implements
@@ -55,9 +46,76 @@ public class myMapFragment extends Fragment implements
             return NO_TILE;
         }
     }
+    Polygon polygon;
+    class PointD {
+        double x, y;
+        PointD(double x, double y) {
+            this.x = x;
+            this.y = y;
+        }
+    }
+    class Scene {
+        double min_x, max_x;
+        double min_y, max_y;
+        Scene(double min_x, double max_x, double min_y, double max_y) {
+            this.min_x = min_x;
+            this.max_x = max_x;
+            this.min_y = min_y;
+            this.max_y = max_y;
+        }
+    }
+    class ConvexShape {
+        ArrayList<PointD> vertices;
+        ConvexShape() {
+            vertices = new ArrayList<>();
+        }
+    }
+    class ConvexQuadrilateral extends ConvexShape {
+        ConvexQuadrilateral(VisibleRegion visibleRegion) {
+            vertices = new ArrayList<>();
+            vertices.add(new PointD(
+                    visibleRegion.nearLeft.longitude,
+                    fromLatitude(visibleRegion.nearLeft.latitude)
+            ));
+            vertices.add(new PointD(
+                    visibleRegion.nearRight.longitude,
+                    fromLatitude(visibleRegion.nearRight.latitude)
+            ));
+            vertices.add(new PointD(
+                    visibleRegion.farRight.longitude,
+                    fromLatitude(visibleRegion.farRight.latitude)
+            ));
+            vertices.add(new PointD(
+                    visibleRegion.farLeft.longitude,
+                    fromLatitude(visibleRegion.farLeft.latitude)
+            ));
+        }
+        PointD calculate_point(double y, double x0, double x1) {
+            return new PointD(x0 * (1 - y) + x1 * y, y);
+        }
+        ConvexShape clipping(Scene scene) {
+            ConvexShape shape = new ConvexShape();
+            PointD current = vertices.get(vertices.size()-1);
+            for (PointD next: vertices) {
+                if (current.y < scene.min_y) {
+                   if (next.y > scene.min_y) {
+                       shape.vertices.add(calculate_point(scene.min_y, current.x, next.x));
+                   }
+                } else if (current.y > scene.max_y) {
+                    if (next.y < scene.max_y) {
+                        shape.vertices.add(calculate_point(scene.max_y, current.x, next.x));
+                    }
+                } else {
+                    shape.vertices.add(current);
+                }
+                current = next;
+            }
+            return shape;
+        }
+    }
     @Override
     public void onCameraIdle() {
-        Log.e("TADA", "onCameraIdle");
+//        Log.e("TADA", "onCameraIdle");
 //        TileProvider tileProvider = new tileProvider();
 //        TileOverlay to = mMap.addTileOverlay(new TileOverlayOptions()
 //                .tileProvider(tileProvider)
@@ -65,6 +123,10 @@ public class myMapFragment extends Fragment implements
 //        to.remove();
         CameraPosition cp = mMap.getCameraPosition();
         Log.e("CameraPosition", cp.toString());
+        int zoom = (int) cp.zoom;
+
+        VisibleRegion visibleRegion = mMap.getProjection().getVisibleRegion();
+        Log.e("Visible region", visibleRegion.toString());
 
         final double MIN_LATITUDE = fromLatitude(-85.0511);
         final double MAX_LATITUDE = fromLatitude( 85.0511);
@@ -72,26 +134,47 @@ public class myMapFragment extends Fragment implements
         final double MIN_LONGITUDE = -180;
         final double MAX_LONGITUDE =  180;
 
+        Scene scene = new Scene(MIN_LONGITUDE, MAX_LONGITUDE-1, MIN_LATITUDE, MAX_LATITUDE-1);
+        ConvexQuadrilateral quad = new ConvexQuadrilateral(visibleRegion);
+        ConvexShape shape = quad.clipping(scene);
+        ArrayList<LatLng> visibleShape = new ArrayList<>();
+        for (PointD vertex : shape.vertices) {
+            visibleShape.add(new LatLng(toLatitude(vertex.y), vertex.x));
+        }
+
         double l_lat = MAX_LATITUDE - MIN_LATITUDE;
         double l_lon = MAX_LONGITUDE - MIN_LONGITUDE;
 
-        int zoom = (int) cp.zoom;
         double lat_normal = l_lat / (1 << zoom);
         double lon_normal = l_lon / (1 << zoom);
         Log.e("Lat normal", ""+ lat_normal);
         Log.e("Lon normal", ""+ lon_normal);
 
-        mMap.addPolygon(new PolygonOptions()
-                .add(
-                        new LatLng(toLatitude(MAX_LATITUDE-1*lat_normal), MAX_LONGITUDE-1*lon_normal),
-                        new LatLng(toLatitude(MAX_LATITUDE-2*lat_normal), MAX_LONGITUDE-1*lon_normal),
-                        new LatLng(toLatitude(MAX_LATITUDE-2*lat_normal), MAX_LONGITUDE-2*lon_normal),
-                        new LatLng(toLatitude(MAX_LATITUDE-1*lat_normal), MAX_LONGITUDE-2*lon_normal)
-                )
+        if (polygon != null) {
+            polygon.remove();
+        }
+        polygon = mMap.addPolygon(new PolygonOptions()
+                .addAll(visibleShape)
+//                .add(
+//                        new LatLng(visibleRegion.nearLeft.latitude,  visibleRegion.nearLeft.longitude),
+//                        new LatLng(visibleRegion.nearRight.latitude, visibleRegion.nearRight.longitude),
+//                        new LatLng(visibleRegion.farRight.latitude,  visibleRegion.farRight.longitude),
+//                        new LatLng(visibleRegion.farLeft.latitude,   visibleRegion.farLeft.longitude)
+//                )
                 .strokeColor(Color.RED)
                 .strokeWidth(17)
-                .fillColor(Color.YELLOW)
         );
+//        polygon = mMap.addPolygon(new PolygonOptions()
+//                .add(
+//                        new LatLng(toLatitude(MAX_LATITUDE-1*lat_normal), MAX_LONGITUDE-1*lon_normal),
+//                        new LatLng(toLatitude(MAX_LATITUDE-2*lat_normal), MAX_LONGITUDE-1*lon_normal),
+//                        new LatLng(toLatitude(MAX_LATITUDE-2*lat_normal), MAX_LONGITUDE-2*lon_normal),
+//                        new LatLng(toLatitude(MAX_LATITUDE-1*lat_normal), MAX_LONGITUDE-2*lon_normal)
+//                )
+//                .strokeColor(Color.RED)
+//                .strokeWidth(17)
+//                .fillColor(Color.YELLOW)
+//        );
     }
     @Override
     public void onCameraMoveStarted(int var1) {
