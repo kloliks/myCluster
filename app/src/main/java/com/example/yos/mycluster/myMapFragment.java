@@ -8,6 +8,11 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
+import com.example.yos.mycluster.Cluster.Utils.ConvexQuadrilateral;
+import com.example.yos.mycluster.Cluster.Utils.ConvexShape;
+import com.example.yos.mycluster.Cluster.Utils.PointD;
+import com.example.yos.mycluster.Cluster.Utils.Scene;
+import com.example.yos.mycluster.Cluster.Utils.SphereMercatorScene;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapView;
 import com.google.android.gms.maps.OnMapReadyCallback;
@@ -24,115 +29,31 @@ import com.google.android.gms.maps.model.VisibleRegion;
 
 import java.util.ArrayList;
 
+import static com.example.yos.mycluster.Cluster.Utils.SphereMercatorScene.fromLatitude;
+
 
 public class myMapFragment extends Fragment implements
       OnMapReadyCallback
     , GoogleMap.OnCameraIdleListener
-    , GoogleMap.OnCameraMoveStartedListener
-    , GoogleMap.OnCameraMoveCanceledListener
 {
-    private static double fromLatitude(double latitude) {
-        double radians = Math.toRadians(latitude + 90) / 2;
-        return Math.toDegrees(Math.log(Math.tan(radians)));
-    }
-    private static double toLatitude(double mercator) {
-        double radians = Math.atan(Math.exp(Math.toRadians(mercator)));
-        return Math.toDegrees(2 * radians) - 90;
-    }
-    class tileProvider implements TileProvider {
-        @Override
-        public Tile getTile(int x, int y, int zoom) {
-            Log.e("myTILE", "x: "+ x +", y: "+ y +", zoom: "+ zoom);
-            return NO_TILE;
-        }
-    }
     Polygon polygon;
-    class PointD {
-        double x, y;
-        PointD(double x, double y) {
-            this.x = x;
-            this.y = y;
-        }
-    }
-    class Scene {
-        double min_x, max_x;
-        double min_y, max_y;
-        Scene(double min_x, double max_x, double min_y, double max_y) {
-            this.min_x = min_x;
-            this.max_x = max_x;
-            this.min_y = min_y;
-            this.max_y = max_y;
-        }
-    }
-    class ConvexShape {
-        ArrayList<PointD> vertices;
-        ConvexShape() {
-            vertices = new ArrayList<>();
-        }
-    }
-    class ConvexQuadrilateral extends ConvexShape {
-        ConvexQuadrilateral(VisibleRegion visibleRegion) {
-            vertices = new ArrayList<>();
-            vertices.add(new PointD(
-                    visibleRegion.nearLeft.longitude,
-                    fromLatitude(visibleRegion.nearLeft.latitude)
-            ));
-            vertices.add(new PointD(
-                    visibleRegion.nearRight.longitude,
-                    fromLatitude(visibleRegion.nearRight.latitude)
-            ));
-            vertices.add(new PointD(
-                    visibleRegion.farRight.longitude,
-                    fromLatitude(visibleRegion.farRight.latitude)
-            ));
-            vertices.add(new PointD(
-                    visibleRegion.farLeft.longitude,
-                    fromLatitude(visibleRegion.farLeft.latitude)
-            ));
-        }
-        PointD calculate_point(double y, double x0, double x1) {
-            return new PointD(x0 * (1 - y) + x1 * y, y);
-        }
-        ConvexShape clipping(Scene scene) {
-            ConvexShape shape = new ConvexShape();
-            PointD current = vertices.get(vertices.size()-1);
-            for (PointD next: vertices) {
-                if (current.y < scene.min_y) {
-                   if (next.y > scene.min_y) {
-                       shape.vertices.add(calculate_point(scene.min_y, current.x, next.x));
-                   }
-                } else if (current.y > scene.max_y) {
-                    if (next.y < scene.max_y) {
-                        shape.vertices.add(calculate_point(scene.max_y, current.x, next.x));
-                    }
-                } else {
-                    shape.vertices.add(current);
-                }
-                current = next;
-            }
-            return shape;
-        }
-    }
+
     @Override
     public void onCameraIdle() {
 //        Log.e("TADA", "onCameraIdle");
-//        TileProvider tileProvider = new tileProvider();
-//        TileOverlay to = mMap.addTileOverlay(new TileOverlayOptions()
-//                .tileProvider(tileProvider)
-//        );
-//        to.remove();
+
         CameraPosition cp = mMap.getCameraPosition();
         Log.e("CameraPosition", cp.toString());
         int zoom = (int) cp.zoom;
 
-//        VisibleRegion visibleRegion = mMap.getProjection().getVisibleRegion();
-        VisibleRegion visibleRegion = new VisibleRegion(
-                new LatLng(-90, 0),
-                new LatLng(-90, 100),
-                new LatLng(-70, 0),
-                new LatLng(-70, 100),
-                null
-        );
+        VisibleRegion visibleRegion = mMap.getProjection().getVisibleRegion();
+//        VisibleRegion visibleRegion = new VisibleRegion(
+//                new LatLng(-86, 0),
+//                new LatLng(-86, 100),
+//                new LatLng(-70, 0),
+//                new LatLng(-70, 100),
+//                null
+//        );
         Log.e("Visible region", visibleRegion.toString());
 
         final double MIN_LATITUDE = fromLatitude(-85.0511);
@@ -141,8 +62,10 @@ public class myMapFragment extends Fragment implements
         final double MIN_LONGITUDE = -180;
         final double MAX_LONGITUDE =  180;
 
-        Scene scene = new Scene(MIN_LONGITUDE, MAX_LONGITUDE-1, MIN_LATITUDE, MAX_LATITUDE-1);
-        ConvexQuadrilateral quad = new ConvexQuadrilateral(visibleRegion);
+        Scene scene = new SphereMercatorScene();
+        ConvexQuadrilateral quad = new ConvexQuadrilateral();
+        quad.setTransform(scene.getTransform());
+        quad.setVisibleRegion(visibleRegion);
         ConvexShape shape = quad.clipping(scene);
         ArrayList<LatLng> visibleShape = new ArrayList<>();
         for (PointD vertex : shape.vertices) {
@@ -184,14 +107,7 @@ public class myMapFragment extends Fragment implements
 //                .fillColor(Color.YELLOW)
 //        );
     }
-    @Override
-    public void onCameraMoveStarted(int var1) {
-        Log.e("TADA", "onCameraMoveStarted");
-    }
-    @Override
-    public void onCameraMoveCanceled() {
-        Log.e("TADA", "onCameraMoveCanceled");
-    }
+
     private static final String MAPVIEW_BUNDLE_KEY = "MapViewBundleKey";
 
     private GoogleMap mMap;
@@ -252,8 +168,6 @@ public class myMapFragment extends Fragment implements
     public void onMapReady(GoogleMap map) {
         mMap = map;
         mMap.setOnCameraIdleListener(this);
-        mMap.setOnCameraMoveStartedListener(this);
-        mMap.setOnCameraMoveCanceledListener(this);
         setMapStyle();
         addTileOverlay();
 

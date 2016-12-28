@@ -168,7 +168,7 @@ public class CoordTileProvider implements TileProvider {
 //    private int old_zoom;
     @Override
     public Tile getTile(int x, int y, int zoom) {
-        Log.e("TILE", "x: "+ x +", y: "+ y +", zoom: "+ zoom);
+//        Log.e("TILE", "x: "+ x +", y: "+ y +", zoom: "+ zoom);
 
 //        if (zoom == 4) {
 //            for (int i = 0; i < mMarkers.size(); ++i) {
