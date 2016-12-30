@@ -1,7 +1,5 @@
 package com.example.yos.mycluster.Cluster.Utils;
 
-import android.util.Log;
-
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.VisibleRegion;
 
@@ -18,7 +16,6 @@ public class ConvexQuadrilateral extends ConvexShape {
         add(region.nearRight, west);
         add(region.farRight, west);
         add(region.farLeft, west);
-        Log.e("vertices", vertices.toString());
     }
     private void add(LatLng point, double west) {
         double x = (point.longitude < west) ? point.longitude + 360 : point.longitude;
