@@ -1,9 +1,5 @@
 package com.example.yos.mycluster.Cluster.Markers;
 
-import android.graphics.Point;
-
-import com.google.android.gms.maps.model.LatLng;
-
 public class Marker {
     public String title;
     public double latitude;

@@ -29,4 +29,17 @@ public class ConvexShape {
         transform(transform, result);
         return result;
     }
+    public ConvexShape clipping(Scene scene) {
+        ConvexShape shape = new ConvexShape();
+        PointD current = vertices.get(vertices.size()-1);
+        for (PointD next: vertices) {
+            Edge edge = scene.clipping(new Edge(current, next));
+            if (edge != null) {
+                shape.addVertex(edge.a);
+                shape.addVertex(edge.b);
+            }
+            current = next;
+        }
+        return shape;
+    }
 }
