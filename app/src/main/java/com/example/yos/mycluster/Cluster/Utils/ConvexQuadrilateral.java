@@ -1,47 +1,33 @@
 package com.example.yos.mycluster.Cluster.Utils;
 
+import android.util.Log;
+
+import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.VisibleRegion;
 
 import java.util.ArrayList;
 
 public class ConvexQuadrilateral extends ConvexShape {
-    private class DefaultTransform implements CoordinateTransform {
-        @Override
-        public double transformX(double x) {
-            return x;
-        }
-        @Override
-        public double transformY(double y) {
-            return y;
-        }
-    }
-
-    private CoordinateTransform coordinateTransform;
     public ConvexQuadrilateral() {
-        coordinateTransform = new DefaultTransform();
         vertices = new ArrayList<>();
     }
-    public void setTransform(CoordinateTransform coordinateTransform) {
-        this.coordinateTransform = coordinateTransform;
-    }
-    public void setVisibleRegion(VisibleRegion visibleRegion) {
+    public void setVisibleRegion(VisibleRegion region) {
+        double west = region.latLngBounds.southwest.longitude;
         vertices.clear();
-        vertices.add(new PointD(
-                coordinateTransform.transformX(visibleRegion.nearLeft.longitude),
-                coordinateTransform.transformY(visibleRegion.nearLeft.latitude)
-        ));
-        vertices.add(new PointD(
-                coordinateTransform.transformX(visibleRegion.nearRight.longitude),
-                coordinateTransform.transformY(visibleRegion.nearRight.latitude)
-        ));
-        vertices.add(new PointD(
-                coordinateTransform.transformX(visibleRegion.farRight.longitude),
-                coordinateTransform.transformY(visibleRegion.farRight.latitude)
-        ));
-        vertices.add(new PointD(
-                coordinateTransform.transformX(visibleRegion.farLeft.longitude),
-                coordinateTransform.transformY(visibleRegion.farLeft.latitude)
-        ));
+        add(region.nearLeft, west);
+        add(region.nearRight, west);
+        add(region.farRight, west);
+        add(region.farLeft, west);
+        Log.e("vertices", vertices.toString());
+    }
+    private void add(LatLng point, double west) {
+        double x = (point.longitude < west) ? point.longitude + 360 : point.longitude;
+        vertices.add(new PointD(x, point.latitude));
+    }
+    public ConvexQuadrilateral transform(CoordinateTransform transform) {
+        ConvexQuadrilateral result = new ConvexQuadrilateral();
+        transform(transform, result);
+        return result;
     }
     public ConvexShape clipping(Scene scene) {
         ConvexShape shape = new ConvexShape();

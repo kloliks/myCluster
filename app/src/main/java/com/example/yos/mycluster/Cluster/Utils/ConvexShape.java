@@ -3,7 +3,7 @@ package com.example.yos.mycluster.Cluster.Utils;
 import java.util.ArrayList;
 
 public class ConvexShape {
-    ArrayList<PointD> vertices;
+    public ArrayList<PointD> vertices;
     ConvexShape() {
         vertices = new ArrayList<>();
     }
@@ -18,5 +18,15 @@ public class ConvexShape {
                 vertices.add(vertex);
         }
         return this;
+    }
+    protected void transform(CoordinateTransform transform, ConvexShape shape) {
+        for (PointD vertex: vertices) {
+            shape.vertices.add(new PointD(transform.x(vertex.x), transform.y(vertex.y)));
+        }
+    }
+    public ConvexShape transform(CoordinateTransform transform) {
+        ConvexShape result = new ConvexShape();
+        transform(transform, result);
+        return result;
     }
 }

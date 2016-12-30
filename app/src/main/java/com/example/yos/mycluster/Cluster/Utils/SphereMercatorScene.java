@@ -1,25 +1,24 @@
 package com.example.yos.mycluster.Cluster.Utils;
 
 
-public class SphereMercatorScene extends Scene {
-    public static double fromLatitude(double latitude) {
-        double radians = Math.toRadians(latitude + 90) / 2;
-        return Math.toDegrees(Math.log(Math.tan(radians)));
-    }
-    public static double toLatitude(double mercator) {
-        double radians = Math.atan(Math.exp(Math.toRadians(mercator)));
-        return Math.toDegrees(2 * radians) - 90;
-    }
+import android.util.Log;
 
+import static com.example.yos.mycluster.Cluster.Utils.SphereMercatorProjection.MAX_LATITUDE;
+import static com.example.yos.mycluster.Cluster.Utils.SphereMercatorProjection.MAX_LONGITUDE;
+import static com.example.yos.mycluster.Cluster.Utils.SphereMercatorProjection.MIN_LATITUDE;
+import static com.example.yos.mycluster.Cluster.Utils.SphereMercatorProjection.MIN_LONGITUDE;
+import static com.example.yos.mycluster.Cluster.Utils.SphereMercatorProjection.fromLatitude;
+
+public class SphereMercatorScene extends Scene {
     public SphereMercatorScene() {
         super();
-        this.min_x = -180;
-        this.max_x =  179;
-        this.min_y = fromLatitude(-85.0511287798);
-        this.max_y = fromLatitude( 85.0511287798) - 1;
+        this.min_x = MIN_LONGITUDE;
+        this.max_x = MAX_LONGITUDE;
+        this.min_y = fromLatitude(MIN_LATITUDE);
+        this.max_y = fromLatitude(MAX_LATITUDE);
     }
     @Override
-    Edge clipping(Edge edge) {
+    public Edge clipping(Edge edge) {
         PointD a = clipping(edge.a, edge.b);
         if (a == null)
             return null;
@@ -44,29 +43,11 @@ public class SphereMercatorScene extends Scene {
         return a;
     }
     private PointD calculate_point(double new_y, PointD a, PointD b) {
+        Log.e("calculate_point", "new_y: "+ new_y +", a: "+ a + ", b:"+ b);
         double y = (new_y - a.y) / (b.y - a.y);
+        Log.e("calculate_point", "y: "+ y);
+        Log.e("calculate_point", "a.x * (1 - y): "+ (a.x * (1 - y)));
+        Log.e("calculate_point", "b.x * y: "+ (b.x * y));
         return new PointD(a.x * (1 - y) + b.x * y, new_y);
-    }
-
-    private class SphereMercatorTransform implements CoordinateTransform {
-        @Override
-        public double transformX(double x) {
-            return x;
-        }
-        @Override
-        public double transformY(double y) {
-            return fromLatitude(y);
-        }
-    }
-
-
-    private static SphereMercatorTransform sphereMercatorTransform;
-
-    @Override
-    public CoordinateTransform getTransform() {
-        if (sphereMercatorTransform != null)
-            return sphereMercatorTransform;
-        sphereMercatorTransform = new SphereMercatorTransform();
-        return sphereMercatorTransform;
     }
 }

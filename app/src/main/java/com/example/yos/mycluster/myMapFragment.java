@@ -10,9 +10,12 @@ import android.view.ViewGroup;
 
 import com.example.yos.mycluster.Cluster.Utils.ConvexQuadrilateral;
 import com.example.yos.mycluster.Cluster.Utils.ConvexShape;
+import com.example.yos.mycluster.Cluster.Utils.MercatorSphereTransform;
 import com.example.yos.mycluster.Cluster.Utils.PointD;
 import com.example.yos.mycluster.Cluster.Utils.Scene;
+import com.example.yos.mycluster.Cluster.Utils.SphereMercatorProjection;
 import com.example.yos.mycluster.Cluster.Utils.SphereMercatorScene;
+import com.example.yos.mycluster.Cluster.Utils.SphereMercatorTransform;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapView;
 import com.google.android.gms.maps.OnMapReadyCallback;
@@ -29,7 +32,12 @@ import com.google.android.gms.maps.model.VisibleRegion;
 
 import java.util.ArrayList;
 
-import static com.example.yos.mycluster.Cluster.Utils.SphereMercatorScene.fromLatitude;
+import static com.example.yos.mycluster.Cluster.Utils.SphereMercatorProjection.MAX_LATITUDE;
+import static com.example.yos.mycluster.Cluster.Utils.SphereMercatorProjection.MAX_LONGITUDE;
+import static com.example.yos.mycluster.Cluster.Utils.SphereMercatorProjection.MIN_LATITUDE;
+import static com.example.yos.mycluster.Cluster.Utils.SphereMercatorProjection.MIN_LONGITUDE;
+import static com.example.yos.mycluster.Cluster.Utils.SphereMercatorProjection.fromLatitude;
+import static com.example.yos.mycluster.Cluster.Utils.SphereMercatorProjection.toLatitude;
 
 
 public class myMapFragment extends Fragment implements
@@ -42,11 +50,6 @@ public class myMapFragment extends Fragment implements
     public void onCameraIdle() {
 //        Log.e("TADA", "onCameraIdle");
 
-        CameraPosition cp = mMap.getCameraPosition();
-        Log.e("CameraPosition", cp.toString());
-        int zoom = (int) cp.zoom;
-
-        VisibleRegion visibleRegion = mMap.getProjection().getVisibleRegion();
 //        VisibleRegion visibleRegion = new VisibleRegion(
 //                new LatLng(-86, 0),
 //                new LatLng(-86, 100),
@@ -54,47 +57,49 @@ public class myMapFragment extends Fragment implements
 //                new LatLng(-70, 100),
 //                null
 //        );
+        VisibleRegion visibleRegion = mMap.getProjection().getVisibleRegion();
         Log.e("Visible region", visibleRegion.toString());
 
-        final double MIN_LATITUDE = fromLatitude(-85.0511);
-        final double MAX_LATITUDE = fromLatitude( 85.0511);
-
-        final double MIN_LONGITUDE = -180;
-        final double MAX_LONGITUDE =  180;
-
         Scene scene = new SphereMercatorScene();
+
         ConvexQuadrilateral quad = new ConvexQuadrilateral();
-        quad.setTransform(scene.getTransform());
         quad.setVisibleRegion(visibleRegion);
-        ConvexShape shape = quad.clipping(scene);
+
+        ConvexShape shape = quad.transform(new SphereMercatorTransform())
+                .clipping(scene)
+                .transform(new MercatorSphereTransform());
+
         ArrayList<LatLng> visibleShape = new ArrayList<>();
         for (PointD vertex : shape.vertices) {
-            visibleShape.add(new LatLng(toLatitude(vertex.y), vertex.x));
+            visibleShape.add(new LatLng(vertex.y, vertex.x));
         }
         Log.e("Visible shape", visibleShape.toString());
-
-        double l_lat = MAX_LATITUDE - MIN_LATITUDE;
-        double l_lon = MAX_LONGITUDE - MIN_LONGITUDE;
-
-        double lat_normal = l_lat / (1 << zoom);
-        double lon_normal = l_lon / (1 << zoom);
-        Log.e("Lat normal", ""+ lat_normal);
-        Log.e("Lon normal", ""+ lon_normal);
 
         if (polygon != null) {
             polygon.remove();
         }
         polygon = mMap.addPolygon(new PolygonOptions()
                 .addAll(visibleShape)
-//                .add(
-//                        new LatLng(visibleRegion.nearLeft.latitude,  visibleRegion.nearLeft.longitude),
-//                        new LatLng(visibleRegion.nearRight.latitude, visibleRegion.nearRight.longitude),
-//                        new LatLng(visibleRegion.farRight.latitude,  visibleRegion.farRight.longitude),
-//                        new LatLng(visibleRegion.farLeft.latitude,   visibleRegion.farLeft.longitude)
-//                )
                 .strokeColor(Color.RED)
                 .strokeWidth(17)
         );
+
+
+//        CameraPosition cp = mMap.getCameraPosition();
+//        Log.e("CameraPosition", cp.toString());
+//        int zoom = (int) cp.zoom;
+//
+//        final double MIN_LATITUDE = fromLatitude(SphereMercatorProjection.MIN_LATITUDE);
+//        final double MAX_LATITUDE = fromLatitude(SphereMercatorProjection.MAX_LATITUDE);
+//
+//        double l_lat = MAX_LATITUDE - MIN_LATITUDE;
+//        double l_lon = MAX_LONGITUDE - MIN_LONGITUDE;
+//
+//        double lat_normal = l_lat / (1 << zoom);
+//        double lon_normal = l_lon / (1 << zoom);
+//        Log.e("Lat normal", ""+ lat_normal);
+//        Log.e("Lon normal", ""+ lon_normal);
+//
 //        polygon = mMap.addPolygon(new PolygonOptions()
 //                .add(
 //                        new LatLng(toLatitude(MAX_LATITUDE-1*lat_normal), MAX_LONGITUDE-1*lon_normal),

@@ -5,5 +5,4 @@ public abstract class Scene {
     double min_y, max_y;
 
     public abstract Edge clipping(Edge edge);
-    public abstract CoordinateTransform getTransform();
 }
