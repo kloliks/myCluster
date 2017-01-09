@@ -10,10 +10,10 @@ import android.view.ViewGroup;
 
 import com.example.yos.mycluster.Cluster.Utils.ConvexQuadrilateral;
 import com.example.yos.mycluster.Cluster.Utils.ConvexShape;
+import com.example.yos.mycluster.Cluster.Utils.CoordinateTransform;
 import com.example.yos.mycluster.Cluster.Utils.MercatorSphereTransform;
 import com.example.yos.mycluster.Cluster.Utils.PointD;
 import com.example.yos.mycluster.Cluster.Utils.Scene;
-import com.example.yos.mycluster.Cluster.Utils.SphereMercatorProjection;
 import com.example.yos.mycluster.Cluster.Utils.SphereMercatorScene;
 import com.example.yos.mycluster.Cluster.Utils.SphereMercatorTransform;
 import com.google.android.gms.maps.GoogleMap;
@@ -25,9 +25,7 @@ import com.google.android.gms.maps.model.MapStyleOptions;
 import com.google.android.gms.maps.model.Polygon;
 import com.google.android.gms.maps.model.PolygonOptions;
 import com.google.android.gms.maps.model.PolylineOptions;
-import com.google.android.gms.maps.model.Tile;
 import com.google.android.gms.maps.model.TileOverlayOptions;
-import com.google.android.gms.maps.model.TileProvider;
 import com.google.android.gms.maps.model.VisibleRegion;
 
 import java.util.ArrayList;
@@ -36,8 +34,6 @@ import static com.example.yos.mycluster.Cluster.Utils.SphereMercatorProjection.M
 import static com.example.yos.mycluster.Cluster.Utils.SphereMercatorProjection.MAX_LONGITUDE;
 import static com.example.yos.mycluster.Cluster.Utils.SphereMercatorProjection.MIN_LATITUDE;
 import static com.example.yos.mycluster.Cluster.Utils.SphereMercatorProjection.MIN_LONGITUDE;
-import static com.example.yos.mycluster.Cluster.Utils.SphereMercatorProjection.fromLatitude;
-import static com.example.yos.mycluster.Cluster.Utils.SphereMercatorProjection.toLatitude;
 
 
 public class myMapFragment extends Fragment implements
@@ -48,8 +44,6 @@ public class myMapFragment extends Fragment implements
 
     @Override
     public void onCameraIdle() {
-//        Log.e("TADA", "onCameraIdle");
-
 //        VisibleRegion visibleRegion = new VisibleRegion(
 //                new LatLng(-86, 0),
 //                new LatLng(-86, 100),
@@ -89,23 +83,29 @@ public class myMapFragment extends Fragment implements
 //        Log.e("CameraPosition", cp.toString());
 //        int zoom = (int) cp.zoom;
 //
-//        final double MIN_LATITUDE = fromLatitude(SphereMercatorProjection.MIN_LATITUDE);
-//        final double MAX_LATITUDE = fromLatitude(SphereMercatorProjection.MAX_LATITUDE);
+//        CoordinateTransform transform = new SphereMercatorTransform();
+//        CoordinateTransform inverted = new MercatorSphereTransform();
 //
-//        double l_lat = MAX_LATITUDE - MIN_LATITUDE;
-//        double l_lon = MAX_LONGITUDE - MIN_LONGITUDE;
+//        final double y_min = transform.y(MAX_LATITUDE);
+//        final double y_max = transform.y(MIN_LATITUDE);
 //
-//        double lat_normal = l_lat / (1 << zoom);
-//        double lon_normal = l_lon / (1 << zoom);
-//        Log.e("Lat normal", ""+ lat_normal);
-//        Log.e("Lon normal", ""+ lon_normal);
+//        final double x_min = transform.x(MIN_LONGITUDE);
+//        final double x_max = transform.x(MAX_LONGITUDE);
+//
+//        double x_length = x_max - x_min;
+//        double y_length = y_max - y_min;
+//
+//        double x_norm = x_length / (1 << zoom);
+//        double y_norm = y_length / (1 << zoom);
+//        Log.e("Lon norm", ""+ x_norm);
+//        Log.e("Lat norm", ""+ y_norm);
 //
 //        polygon = mMap.addPolygon(new PolygonOptions()
 //                .add(
-//                        new LatLng(toLatitude(MAX_LATITUDE-1*lat_normal), MAX_LONGITUDE-1*lon_normal),
-//                        new LatLng(toLatitude(MAX_LATITUDE-2*lat_normal), MAX_LONGITUDE-1*lon_normal),
-//                        new LatLng(toLatitude(MAX_LATITUDE-2*lat_normal), MAX_LONGITUDE-2*lon_normal),
-//                        new LatLng(toLatitude(MAX_LATITUDE-1*lat_normal), MAX_LONGITUDE-2*lon_normal)
+//                        new LatLng(inverted.y(1*y_norm), inverted.x(1*x_norm)),
+//                        new LatLng(inverted.y(2*y_norm), inverted.x(1*x_norm)),
+//                        new LatLng(inverted.y(2*y_norm), inverted.x(2*x_norm)),
+//                        new LatLng(inverted.y(1*y_norm), inverted.x(2*x_norm))
 //                )
 //                .strokeColor(Color.RED)
 //                .strokeWidth(17)

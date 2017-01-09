@@ -5,15 +5,15 @@ import static com.example.yos.mycluster.Cluster.Utils.SphereMercatorProjection.M
 import static com.example.yos.mycluster.Cluster.Utils.SphereMercatorProjection.MAX_LONGITUDE;
 import static com.example.yos.mycluster.Cluster.Utils.SphereMercatorProjection.MIN_LATITUDE;
 import static com.example.yos.mycluster.Cluster.Utils.SphereMercatorProjection.MIN_LONGITUDE;
-import static com.example.yos.mycluster.Cluster.Utils.SphereMercatorProjection.fromLatitude;
 
 public class SphereMercatorScene extends Scene {
     public SphereMercatorScene() {
         super();
-        this.min_x = MIN_LONGITUDE;
-        this.max_x = MAX_LONGITUDE;
-        this.min_y = fromLatitude(MIN_LATITUDE);
-        this.max_y = fromLatitude(MAX_LATITUDE);
+        CoordinateTransform transform = new SphereMercatorTransform();
+        this.min_x = transform.x(MIN_LONGITUDE); // 0
+        this.max_x = transform.x(MAX_LONGITUDE); // 360
+        this.min_y = transform.y(MAX_LATITUDE);  // ~ 0
+        this.max_y = transform.y(MIN_LATITUDE);  // ~ 360
     }
     @Override
     public Edge clipping(Edge edge) {
